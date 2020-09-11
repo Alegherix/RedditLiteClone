@@ -14,4 +14,4 @@ Fullstack projekt för att lära mig:
 - TypeGraphQL
 - Chakra
 
-Tutorial gjord av[Ben Awad](https://www.youtube.com/watch?v=I6ypD7qv3Z8)
+Tutorial gjord av [Ben Awad](https://www.youtube.com/watch?v=I6ypD7qv3Z8)
