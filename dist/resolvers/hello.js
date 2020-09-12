@@ -9,21 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HelloResolver = void 0;
+exports.UserResolver = void 0;
 const type_graphql_1 = require("type-graphql");
-let HelloResolver = class HelloResolver {
+let UserResolver = class UserResolver {
     hello() {
         return 'hello world';
     }
 };
 __decorate([
-    type_graphql_1.Query(() => String),
+    type_graphql_1.Mutation(() => String),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], HelloResolver.prototype, "hello", null);
-HelloResolver = __decorate([
+], UserResolver.prototype, "hello", null);
+UserResolver = __decorate([
     type_graphql_1.Resolver()
-], HelloResolver);
-exports.HelloResolver = HelloResolver;
+], UserResolver);
+exports.UserResolver = UserResolver;
 //# sourceMappingURL=hello.js.map
