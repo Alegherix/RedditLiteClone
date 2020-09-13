@@ -70,16 +70,50 @@ UserResponse = __decorate([
 let UserResolver = class UserResolver {
     register(options, { em }) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (options.username.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: 'username',
+                            message: 'Username has to have a length greater than two',
+                        },
+                    ],
+                };
+            }
+            if (options.password.length <= 2) {
+                return {
+                    errors: [
+                        {
+                            field: 'password',
+                            message: 'Password has to have a length greater than two',
+                        },
+                    ],
+                };
+            }
             const hashedPassword = yield argon2_1.default.hash(options.password);
             const user = em.create(User_1.User, {
                 username: options.username,
                 password: hashedPassword,
             });
-            yield em.persistAndFlush(user);
-            return user;
+            try {
+                yield em.persistAndFlush(user);
+            }
+            catch (err) {
+                if (err.code === '23505') {
+                    return {
+                        errors: [
+                            {
+                                field: 'username',
+                                message: 'Username already exists',
+                            },
+                        ],
+                    };
+                }
+            }
+            return { user };
         });
     }
-    login(options, { em }) {
+    login(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield em.findOne(User_1.User, { username: options.username });
             if (!user) {
@@ -103,6 +137,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
+            req.session.userID = user.id;
             return {
                 user,
             };
@@ -110,7 +145,7 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    type_graphql_1.Mutation(() => User_1.User),
+    type_graphql_1.Mutation(() => UserResponse),
     __param(0, type_graphql_1.Arg('options')),
     __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),

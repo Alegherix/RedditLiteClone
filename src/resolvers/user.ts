@@ -44,11 +44,32 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   async register(
     @Arg('options') options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
-  ) {
+  ): Promise<UserResponse> {
+    if (options.username.length <= 2) {
+      return {
+        errors: [
+          {
+            field: 'username',
+            message: 'Username has to have a length greater than two',
+          },
+        ],
+      };
+    }
+
+    if (options.password.length <= 2) {
+      return {
+        errors: [
+          {
+            field: 'password',
+            message: 'Password has to have a length greater than two',
+          },
+        ],
+      };
+    }
     // Skapar ett hashat lösenord
     const hashedPassword = await argon2.hash(options.password);
 
@@ -57,14 +78,29 @@ export class UserResolver {
       username: options.username,
       password: hashedPassword,
     });
-    await em.persistAndFlush(user);
-    return user;
+
+    // Försöker posta till databasen och kollar så användaren inte redan finns, isf ge felmeddelande.
+    try {
+      await em.persistAndFlush(user);
+    } catch (err) {
+      if (err.code === '23505') {
+        return {
+          errors: [
+            {
+              field: 'username',
+              message: 'Username already exists',
+            },
+          ],
+        };
+      }
+    }
+    return { user };
   }
 
   @Mutation(() => UserResponse)
   async login(
     @Arg('options') options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     const user = await em.findOne(User, { username: options.username });
 
@@ -91,7 +127,9 @@ export class UserResolver {
         ],
       };
     }
-    // Om allt stämmer returnera användaren.
+
+    req.session!.userID = user.id;
+
     return {
       user,
     };
