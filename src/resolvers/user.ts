@@ -11,6 +11,7 @@ import {
 import { MyContext } from 'src/types';
 import { User } from '../entities/User';
 import argon2 from 'argon2';
+import { EntityManager } from '@mikro-orm/postgresql';
 
 // Alternativ till att dekorera med flertalet @Arg
 @InputType()
@@ -59,7 +60,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg('options') options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     if (options.username.length <= 2) {
       return {
@@ -85,15 +86,21 @@ export class UserResolver {
     // Skapar ett hashat lösenord
     const hashedPassword = await argon2.hash(options.password);
 
-    // Skapar själva användaren i databasen
-    const user = em.create(User, {
-      username: options.username,
-      password: hashedPassword,
-    });
+    let user;
 
     // Försöker posta till databasen och kollar så användaren inte redan finns, isf ge felmeddelande.
     try {
-      await em.persistAndFlush(user);
+      const result = await (em as EntityManager)
+        .createQueryBuilder(User)
+        .getKnexQuery()
+        .insert({
+          username: options.username,
+          password: hashedPassword,
+          created_at: new Date(),
+          updated_at: new Date(),
+        })
+        .returning('*');
+      user = result[0];
     } catch (err) {
       if (err.code === '23505') {
         return {
@@ -106,6 +113,9 @@ export class UserResolver {
         };
       }
     }
+    console.log('Im a user', user);
+
+    req.session.userId = user.id;
     return { user };
   }
 

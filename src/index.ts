@@ -10,7 +10,6 @@ import { PostResolver } from './resolvers/post';
 import redis from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
-import { MyContext } from './types';
 import cors from 'cors';
 
 const main = async () => {
@@ -27,7 +26,7 @@ const main = async () => {
 
   app.use(
     cors({
-      origin: 'http://localhost:3000',
+      origin: 'http://localhost:3001',
       credentials: true,
     })
   );
@@ -61,7 +60,7 @@ const main = async () => {
       resolvers: [UserResolver, PostResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({ em: orm.em, req, res }),
   });
 
   //Skapar en GraphQL endpoint
